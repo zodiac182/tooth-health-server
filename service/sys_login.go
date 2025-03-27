@@ -23,7 +23,7 @@ func (s *LoginService) Login(loginInfo *request.SysLoginReq) (*system.SysUser, e
 	username := loginInfo.Username
 	password := loginInfo.Password
 
-	user, err := UserServiceApp.GetUserByUsername(username)
+	user, err := UserServiceApp.GetUserByUserName(username)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.New("用户不存在")

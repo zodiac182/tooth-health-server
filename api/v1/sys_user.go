@@ -2,6 +2,7 @@ package v1
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/zodiac182/tooth-health/server/core/logger"
@@ -14,16 +15,80 @@ import (
 
 type SysUserApi struct{}
 
+// 获取用户列表
 func (api *SysUserApi) ListSysUsers(c *gin.Context) {
+	logger.Debug("ListSysUsers API called")
+
+	username := strings.TrimSpace(c.Query("username"))
+	nickname := strings.TrimSpace(c.Query("nickname"))
+	if username != "" || nickname != "" {
+		// 当前请求是通过用户名或姓名进行查找
+
+		var responseData response.SysUsersResponse
+
+		if username != "" {
+			var userList []system.SysUser
+			// 通过用户名进行查找，有且只有唯一的结果
+			var user *system.SysUser
+			user, err := service.UserServiceApp.GetUserByUserName(username)
+			if err != nil {
+				response.FailWithMessage(err.Error(), c)
+				return
+			}
+			if user == nil {
+				response.FailWithMessage("用户不存在", c)
+				return
+			}
+			userList = append(userList, *user)
+			responseData.Data = userList
+			responseData.Total = 1
+
+		} else {
+			// 通过姓名进行查找，可能有多个结果
+			userList, err := service.UserServiceApp.GetUserByNickname(nickname)
+			if err != nil {
+				response.FailWithMessage(err.Error(), c)
+				return
+			}
+			responseData.Data = *userList
+			responseData.Total = int(len(*userList))
+		}
+
+		response.OkWithData(responseData, c)
+		return
+	}
+
+	pageStr := strings.TrimSpace(c.Query("page"))
+	sizeStr := strings.TrimSpace(c.Query("size"))
+	logger.Debug("pageStr: %s, sizeStr: %s", pageStr, sizeStr)
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		logger.Error("page is not a number. %+v", err)
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		logger.Error("size is not a number. %+v", err)
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
 	var userList *[]system.SysUser
 
-	userList, err := service.UserServiceApp.GetAllUsers()
+	userList, total, err := service.UserServiceApp.GetAllUsers(page, size)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
-	response.OkWithData(userList, c)
+	var responseData response.SysUsersResponse
+	responseData.Data = *userList
+	responseData.Total = int(total)
+
+	response.OkWithData(responseData, c)
 }
 
 // 添加用户

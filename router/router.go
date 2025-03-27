@@ -32,6 +32,7 @@ func Routers() *gin.Engine {
 	protectedGroup := r.Group(global.RouterPrefix)
 	protectedGroup.Use(middleware.JwtMiddleware())
 	{
+		// 系统用户相关
 		protectedGroup.GET("/version", routerGroupApp.VersionApi.GetVersion)
 		protectedGroup.GET("/sysusers", routerGroupApp.SysUserApi.ListSysUsers)                    // 用户列表
 		protectedGroup.POST("/sysuser", routerGroupApp.SysUserApi.AddSysUser)                      // 创建用户
@@ -43,8 +44,15 @@ func Routers() *gin.Engine {
 	}
 
 	{
-		protectedGroup.POST("/report/new", routerGroupApp.CUserApi.CreateUserAndTeethCheck)
+		// 用户相关
+		protectedGroup.POST("/cuser", routerGroupApp.CUserApi.CreateOrUpdateCUser)
+		protectedGroup.GET("/cuser", routerGroupApp.CUserApi.GetUserByIdCard) // 通过身份证号获取用户信息
 	}
 
+	{
+		// 检查记录相关
+		protectedGroup.POST("/tooth/record", routerGroupApp.ToothApi.CreateTeethRecord)   // 创建牙齿检查记录
+		protectedGroup.GET("/tooth/record/all", routerGroupApp.ToothApi.GetRecordHistory) // 获取用户所有检查记录概要
+	}
 	return r
 }

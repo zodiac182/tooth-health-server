@@ -7,4 +7,5 @@ type ApiGroup struct {
 	LoginApi   v1.LoginApi
 	SysUserApi v1.SysUserApi
 	CUserApi   v1.CUserApi
+	ToothApi   v1.ToothApi
 }

@@ -20,8 +20,9 @@ func (s *UserService) CreateUser(user *system.SysUser) error {
 	return s.db.Create(user).Error
 }
 
-func (s *UserService) GetUserByUsername(username string) (*system.SysUser, error) {
-	logger.Debug("GetUserByUsername called: %s", username)
+// 通过用户名查找用户
+func (s *UserService) GetUserByUserName(username string) (*system.SysUser, error) {
+	logger.Debug("GetUserByUserName called: %s", username)
 	var user system.SysUser
 	err := s.db.First(&user, "username = ?", username).Error
 	if err != nil {
@@ -30,14 +31,34 @@ func (s *UserService) GetUserByUsername(username string) (*system.SysUser, error
 	return &user, nil
 }
 
-func (s *UserService) GetAllUsers() (*[]system.SysUser, error) {
-	logger.Debug("GetAllUsers called: ")
+// 通过姓名查找用户
+func (s *UserService) GetUserByNickname(nickname string) (*[]system.SysUser, error) {
+	logger.Debug("GetUserByNickname called: %s", nickname)
 	var users []system.SysUser
-	err := s.db.Find(&users).Error
+	err := s.db.Find(&users, "nickname LIKE ?", "%"+nickname+"%").Error
 	if err != nil {
 		return nil, err
 	}
 	return &users, nil
+}
+
+func (s *UserService) GetAllUsers(page, size int) (*[]system.SysUser, int64, error) {
+	logger.Debug("GetAllUsers service called")
+	// 先获取总数
+	var total int64
+	if err := s.db.Model(&system.SysUser{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	var users []system.SysUser
+
+	// 计算offset
+	offset := (page - 1) * size
+
+	err := s.db.Offset(offset).Limit(size).Find(&users).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return &users, total, nil
 }
 
 func (s *UserService) AddUser(user *system.SysUser) error {

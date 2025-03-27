@@ -74,7 +74,7 @@ func InitDB() {
 	err = DB.AutoMigrate(
 		&system.SysUser{},
 		&system.CUser{},
-		&system.TeethReport{},
+		&system.TeethRecord{},
 	)
 	if err != nil {
 		logger.Fatal("Failed to migrate database: %+v", err)

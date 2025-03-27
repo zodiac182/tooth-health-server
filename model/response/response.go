@@ -14,6 +14,7 @@ type Response struct {
 
 const (
 	ERROR   = 1
+	EXISTED = 7
 	SUCCESS = 0
 )
 
@@ -52,4 +53,12 @@ func FailWithMessage(message string, c *gin.Context) {
 
 func FailWithDetailed(data interface{}, message string, c *gin.Context) {
 	Result(ERROR, data, message, c)
+}
+
+func ExistedWithData(data interface{}, c *gin.Context) {
+	Result(EXISTED, data, "已存在", c)
+}
+
+func Existed(c *gin.Context) {
+	Result(EXISTED, map[string]interface{}{}, "已存在", c)
 }
